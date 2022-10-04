@@ -16,12 +16,15 @@ namespace LMB2.BAL
 
         // Public Properties
 
+        #region Ctors..
         // Constructor's
         public UserBO()
         {
             dc = new LMDBDataContext();
         }
+        #endregion
 
+        #region Get Methods
         // Get Methods (Select queries)
         public List<User> GetUsers()
         {
@@ -35,17 +38,43 @@ namespace LMB2.BAL
             return dc.Users.SingleOrDefault(u => u.UserId == userId);
         }
 
+        public User GetUser2(int userId)
+        {
+            //var Query = from u in dc.Users
+            //            where u.UserId == userId
+            //            select u;
+
+            //return Query.SingleOrDefault();
+
+            return (
+                from u in dc.Users
+                join l in dc.LeaveApplications on u.UserId equals l.UserId
+                where u.UserId == userId
+                select u
+                ).SingleOrDefault();
+
+
+        }
+
+        // write a method that retrieve a user based on username
+        public List<User> GetUser3(string userName)
+        {
+            return dc.Users.Where(c => c.Username == userName).ToList();
+        }
+
         public List<User> GetUsersBySearch()
         {
             // TODO
             return new List<User>();
         }
+        #endregion
 
+        #region Insert/Update Methods
         // Insert Methods
         public int Save(User user)
         {
             // Check if the (user) is existed or not
-            
+
             bool isInsert = false;
             var _user = dc.Users.SingleOrDefault(u => u.UserId == user.UserId);
 
@@ -75,9 +104,30 @@ namespace LMB2.BAL
             return _user.UserId;
 
         }
+        #endregion
 
+        #region Delete Methods
+        public void Delete(int userId)
+        {
+            var delUser = dc.Users.SingleOrDefault(u => u.UserId == userId);
 
-        // Delete Methods
+            if (delUser == null) return;
+
+            dc.Users.DeleteOnSubmit(delUser);
+            dc.SubmitChanges();
+        }
+
+        public void FakeDelete(int userId)
+        {
+            var delUser = dc.Users.SingleOrDefault(u => u.UserId == userId);
+
+            if (delUser == null) return;
+
+            delUser.IsDeleted = true;
+            dc.SubmitChanges();
+        }
+        #endregion
+
     }
 }
 
